@@ -9,59 +9,65 @@ customized with a `config.yaml` file.
 ## Requirements
 
 - Python 3.10+
+- [`uv`](https://docs.astral.sh/uv/) for the install, run, build, and test commands below
 - No runtime dependencies
 
 ## Installation
 
-### From PyPI
+### From PyPI as a uv-managed CLI tool
 
 ```bash
-python -m pip install korname-generator
+uv tool install korname-generator
 ```
 
 The PyPI distribution is `korname-generator`; the installed console command is
 `korean-name-generator`.
 
-### From this repository, editable development install
+After installation, run:
+
+```bash
+korean-name-generator --help
+```
+
+For a one-off run without installing the tool first, use `uvx`:
+
+```bash
+uvx --from korname-generator korean-name-generator --help
+```
+
+### From this repository for local development
 
 Use this when you are working on the package locally:
 
 ```bash
 git clone <repo-url>
 cd korean-name-generator
-python -m venv .venv
-. .venv/bin/activate
-python -m pip install -e .
+uv sync --dev
+uv run korean-name-generator --help
 ```
 
-### From this repository, normal local install
+### From this repository as a local uv-managed CLI tool
 
-Use this when you just want the CLI and importable package from the local
-checkout:
+Use this when you want to install the CLI from the local checkout into uv's tool
+space:
 
 ```bash
 cd korean-name-generator
-python -m pip install .
-```
-
-### Build and install a wheel
-
-```bash
-python -m pip wheel . --no-deps -w dist
-python -m pip install dist/korname_generator-0.1.0-py3-none-any.whl
-```
-
-After installation, the console command is available as:
-
-```bash
+uv tool install .
 korean-name-generator --help
 ```
 
-You can also run it without installing by setting `PYTHONPATH` from the repo
-root:
+### Build and install a wheel with uv
 
 ```bash
-PYTHONPATH=src python -m korean_name_generator --help
+uv build
+uv tool install dist/korname_generator-0.1.0-py3-none-any.whl
+```
+
+You can also run the package module directly from the local checkout:
+
+```bash
+uv run python -m korean_name_generator --help
 ```
 
 ## CLI examples
@@ -219,10 +225,10 @@ first syllable, generation raises `ValueError`.
 ## Development and verification
 
 ```bash
-PYTHONPATH=src python -m unittest discover -s tests
-python -m compileall -q src tests
-PYTHONPATH=src python -m korean_name_generator --count 2 --seed 1 --format json
-python -m pip wheel . --no-deps -w dist
+uv run python -m pytest
+uv run python -m compileall -q src tests
+uv run python -m korean_name_generator --count 2 --seed 1 --format json
+uv build
 ```
 
 Or use the Makefile shortcuts:
