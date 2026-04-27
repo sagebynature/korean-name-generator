@@ -38,3 +38,24 @@ line-length = 88
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ty.environment]
+root = ["src"]
+
+[tool.ty.src]
+include = ["korean_name_generator"]
+exclude = []
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+major_on_zero = true
+upload_to_pypi = false
+commit_message = "{version}\n\n[skip ci]"
+
+[tool.semantic_release.branches.main]
+match = "main"
+
+[tool.semantic_release.branches.dev]
+match = "dev"
+prerelease = true
+prerelease_token = "rc"
