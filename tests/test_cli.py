@@ -4,14 +4,32 @@ import io
 import json
 import tempfile
 import unittest
-from pathlib import Path
 from contextlib import redirect_stdout
+from pathlib import Path
+from unittest.mock import patch
 
+from korean_name_generator import cli
 from korean_name_generator.cli import emit_names, main
 from korean_name_generator.generator import generate_names
 
 
 class CliTests(unittest.TestCase):
+    def test_main_initializes_logging_from_src_config(self) -> None:
+        stdout = io.StringIO()
+        with patch(
+            "korean_name_generator.cli.logging.config.fileConfig"
+        ) as file_config:
+            with redirect_stdout(stdout):
+                exit_code = main(["--count", "1", "--seed", "1"])
+
+        self.assertEqual(exit_code, 0)
+        file_config.assert_called_once()
+        self.assertEqual(
+            Path(file_config.call_args.args[0]),
+            Path(cli.__file__).resolve().parents[1] / "logging.conf",
+        )
+        self.assertFalse(file_config.call_args.kwargs["disable_existing_loggers"])
+
     def test_main_emits_seeded_json(self) -> None:
         stdout = io.StringIO()
         with redirect_stdout(stdout):

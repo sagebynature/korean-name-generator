@@ -13,12 +13,21 @@ authors = [{ name = "sagebynature" }]
 keywords = ["korean", "names", "generator", "cli"]
 dependencies = []
 
+[dependency-groups]
+dev = [
+    "colorlog>=6.10.1",
+    "pre-commit>=4.5.1",
+    "pytest>=8.0,<9",
+    "ruff>=0.14,<0.15",
+    "ty==0.0.23",
+]
+
 [project.scripts]
 korean-name-generator = "korean_name_generator.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/korean_name_generator"]
-force-include = { "src/korean_name_generator/config.yaml" = "korean_name_generator/config.yaml" }
+force-include = { "src/korean_name_generator/config.yaml" = "korean_name_generator/config.yaml", "src/logging.conf" = "korean_name_generator/logging.conf" }
 
 [tool.hatch.build.targets.sdist]
 include = ["src", "tests", "README.md", "LICENSE", "docs/refactor-plan.md"]

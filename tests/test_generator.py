@@ -11,9 +11,9 @@ from korean_name_generator import (
     GENDER_NEUTRAL_SECOND_SYLLABLES,
     MALE_SECOND_SYLLABLES,
     KoreanNameGenerator,
-    load_name_config,
     generate_name,
     generate_names,
+    load_name_config,
 )
 
 
@@ -34,7 +34,6 @@ class KoreanNameGeneratorTests(unittest.TestCase):
         self.assertEqual(female.gender, "female")
         self.assertIn(male.given_name_ko[-1], male_seconds)
         self.assertIn(female.given_name_ko[-1], female_seconds)
-
 
     def test_neutral_generation_uses_neutral_second_syllable_pool(self) -> None:
         name = generate_name("neutral", random_seed=1)
@@ -78,6 +77,8 @@ class KoreanNameGeneratorTests(unittest.TestCase):
 
         self.assertEqual(config.family_names, (("Test", "테"),))
         self.assertEqual(name.family_name_ko, "테")
+        self.assertEqual(name.given_name_en, "Jiho")
+        self.assertEqual(name.romanized, "Jiho Test")
         self.assertEqual(name.given_name_ko, "지호")
 
     def test_generated_name_is_two_syllable_given_name_plus_family_name(self) -> None:
@@ -93,6 +94,17 @@ class KoreanNameGeneratorTests(unittest.TestCase):
     def test_generator_advances_rng_state(self) -> None:
         generator = KoreanNameGenerator(random_seed=11)
         self.assertNotEqual(generator.generate(), generator.generate())
+
+    def test_generation_logs_batch_size_and_gender(self) -> None:
+        with self.assertLogs("korean_name_generator.generator", level="INFO") as logs:
+            names = generate_names(2, gender="male", random_seed=5)
+
+        self.assertEqual(len(names), 2)
+        self.assertIn(
+            "Generating 2 Korean name(s) with requested gender=male",
+            logs.output[0],
+        )
+        self.assertIn("Generated 2 Korean name(s)", logs.output[-1])
 
     def test_rejects_invalid_count_and_empty_pools(self) -> None:
         with self.assertRaisesRegex(ValueError, "count must be at least 1"):
