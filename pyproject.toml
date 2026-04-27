@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "korean-name-generator"
+version = "0.1.0"
+description = "Dependency-free Korean name generator library and CLI extracted from Onnuri seed tooling"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "sagebynature" }]
+keywords = ["korean", "names", "generator", "cli"]
+dependencies = []
+
+[project.scripts]
+korean-name-generator = "korean_name_generator.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/korean_name_generator"]
+force-include = { "src/korean_name_generator/config.yaml" = "korean_name_generator/config.yaml" }
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "tests", "README.md", "LICENSE", "docs/refactor-plan.md"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
