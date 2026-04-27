@@ -224,3 +224,21 @@ make compile
 make smoke
 make check
 ```
+
+## Release automation
+
+Merges to `main` run the GitHub Actions workflow in
+`.github/workflows/publish.yml`. The workflow runs linting, formatting checks,
+type checking, tests, builds the source distribution and wheel, then publishes to
+PyPI when the `pyproject.toml` version does not already exist on PyPI.
+
+Publishing uses PyPI Trusted Publishing, so no long-lived PyPI API token is
+required. Configure the PyPI project trusted publisher with:
+
+- owner: `sagebynature`
+- repository: `korean-name-generator`
+- workflow: `publish.yml`
+- environment: `pypi`
+
+Bump `[project].version` before merging when a new PyPI release should be
+created.

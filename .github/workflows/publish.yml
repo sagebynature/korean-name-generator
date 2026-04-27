@@ -1,0 +1,151 @@
+name: CI/CD
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - '3.10'
+          - '3.12'
+          - '3.13'
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v8
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked --group dev
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Check formatting
+        run: uv run ruff format --check .
+
+      - name: Typecheck
+        run: uv run ty check
+
+      - name: Test
+        run: uv run python -m pytest
+
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v8
+        with:
+          enable-cache: true
+
+      - name: Build package
+        run: uv build
+
+      - name: Upload distribution artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: pypi
+      url: https://pypi.org/p/korean-name-generator
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Download distribution artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Check whether this version is already on PyPI
+        id: pypi-version
+        shell: python
+        run: |
+          import json
+          import os
+          import tomllib
+          import urllib.error
+          import urllib.request
+          from pathlib import Path
+
+          metadata = tomllib.loads(Path('pyproject.toml').read_text())
+          project = metadata['project']['name']
+          version = metadata['project']['version']
+          url = f'https://pypi.org/pypi/{project}/json'
+
+          publish = True
+          try:
+              with urllib.request.urlopen(url, timeout=20) as response:
+                  releases = json.load(response).get('releases', {})
+          except urllib.error.HTTPError as exc:
+              if exc.code != 404:
+                  raise
+          else:
+              publish = version not in releases
+
+          print(f'project={project}')
+          print(f'version={version}')
+          print(f'publish={str(publish).lower()}')
+          with Path(os.environ['GITHUB_OUTPUT']).open('a', encoding='utf-8') as output:
+              output.write(f'project={project}\n')
+              output.write(f'version={version}\n')
+              output.write(f'publish={str(publish).lower()}\n')
+
+      - name: Publish package distributions to PyPI
+        if: steps.pypi-version.outputs.publish == 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Skip existing PyPI version
+        if: steps.pypi-version.outputs.publish != 'true'
+        run: |
+          echo "${{ steps.pypi-version.outputs.project }} ${{ steps.pypi-version.outputs.version }} already exists on PyPI; skipping publish."
