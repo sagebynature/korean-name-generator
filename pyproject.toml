@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "korean-name-generator"
+name = "korname-generator"
 version = "0.1.0"
 description = "Dependency-free Korean name generator library and CLI extracted from Onnuri seed tooling"
 readme = "README.md"

@@ -1,3 +1,5 @@
+# Release workflow
+
 name: Release & Publish
 
 on:
@@ -5,17 +7,31 @@ on:
     branches: [main, dev]
   workflow_dispatch:
 
-permissions:
-  contents: write
-  id-token: write
-
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Run lint, typecheck, and tests
+        run: make check
+
   release:
+    needs: check
     runs-on: ubuntu-latest
     concurrency: release
+    permissions:
+      contents: write
+      id-token: write
     outputs:
       released: ${{ steps.release.outputs.released }}
       version: ${{ steps.release.outputs.version }}
+      tag: ${{ steps.release.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -23,6 +39,8 @@ jobs:
           token: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
 
       - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
       - name: Python Semantic Release
         id: release
@@ -34,16 +52,21 @@ jobs:
     needs: release
     if: needs.release.outputs.released == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     environment:
       name: pypi
       url: https://pypi.org/p/korname-generator
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: v${{ needs.release.outputs.version }}
+          ref: ${{ needs.release.outputs.tag }}
           fetch-depth: 0
 
       - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
       - name: Build package
         run: uv build

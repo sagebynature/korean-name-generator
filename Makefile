@@ -8,7 +8,7 @@ lint:
 	uv run ruff format --check .
 
 typecheck:
-	uv run ty check
+	uv run ty check src/korean_name_generator/*.py tests/*.py
 
 test: typecheck
 	uv run python -m pytest

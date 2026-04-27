@@ -1,4 +1,4 @@
-# korean-name-generator
+# korname-generator
 
 Dependency-free Korean name generator library and CLI.
 
@@ -12,6 +12,15 @@ customized with a `config.yaml` file.
 - No runtime dependencies
 
 ## Installation
+
+### From PyPI
+
+```bash
+python -m pip install korname-generator
+```
+
+The PyPI distribution is `korname-generator`; the installed console command is
+`korean-name-generator`.
 
 ### From this repository, editable development install
 
@@ -39,7 +48,7 @@ python -m pip install .
 
 ```bash
 python -m pip wheel . --no-deps -w dist
-python -m pip install dist/korean_name_generator-0.1.0-py3-none-any.whl
+python -m pip install dist/korname_generator-0.1.0-py3-none-any.whl
 ```
 
 After installation, the console command is available as:
@@ -219,26 +228,26 @@ python -m pip wheel . --no-deps -w dist
 Or use the Makefile shortcuts:
 
 ```bash
+make lint
 make test
-make compile
-make smoke
 make check
 ```
 
 ## Release automation
 
-Merges to `main` run the GitHub Actions workflow in
-`.github/workflows/publish.yml`. The workflow runs linting, formatting checks,
-type checking, tests, builds the source distribution and wheel, then publishes to
-PyPI when the `pyproject.toml` version does not already exist on PyPI.
+Merges to `main` or `dev` run the GitHub Actions workflow in
+`.github/workflows/release.yml`. The workflow first runs `make check` (Ruff
+linting, Ruff format checks, Ty type checking, and pytest). If semantic-release
+creates a release, the publish job builds the source distribution and wheel with
+`uv build`, then publishes the `korname-generator` distribution to PyPI.
 
 Publishing uses PyPI Trusted Publishing, so no long-lived PyPI API token is
-required. Configure the PyPI project trusted publisher with:
+required. The PyPI project trusted publisher is configured with:
 
 - owner: `sagebynature`
 - repository: `korean-name-generator`
-- workflow: `publish.yml`
+- workflow: `release.yml`
 - environment: `pypi`
 
-Bump `[project].version` before merging when a new PyPI release should be
-created.
+Semantic-release owns `[project].version` in `pyproject.toml`; use Conventional
+Commits on `main` for stable releases and on `dev` for `rc` prereleases.
